@@ -7,5 +7,5 @@ using FUBusiness.Models;
 
 namespace Repositories
 {
-    public interface ISessionRepository : IBaseRepository<Session, int> { }
+    public interface ISessionRepository : IBaseRepository<Session, String> { }
 }

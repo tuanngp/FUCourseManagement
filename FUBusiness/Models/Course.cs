@@ -14,4 +14,6 @@ public partial class Course
     public int Capacity { get; set; }
 
     public DateTime? CreatedAt { get; set; }
+
+    public virtual ICollection<EnrollmentRecord> EnrollmentRecords { get; set; } = new List<EnrollmentRecord>();
 }

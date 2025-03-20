@@ -15,5 +15,7 @@ public partial class EnrollmentRecord
 
     public bool? Dropped { get; set; }
 
+    public virtual Course? Course { get; set; }
+
     public virtual User? User { get; set; }
 }

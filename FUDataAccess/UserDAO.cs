@@ -1,12 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using DataAccessObjects;
+﻿using DataAccessObjects;
 using FUBusiness.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace FUDataAccess
 {
-    public class UserDAO : BaseDAO<User, int> { }
+    public class UserDAO : BaseDAO<User, int>
+    {
+        protected override IQueryable<User> AddIncludes(IQueryable<User> query)
+        {
+            return query.Include(query => query.EnrollmentRecords).Include(query => query.Sessions);
+        }
+    }
 }

@@ -7,9 +7,9 @@ namespace Repositories.RepositoriesImpl
     {
         private readonly CourseDAO _courseDAO;
 
-        public CourseRepository(CourseDAO courseDAO)
+        public CourseRepository()
         {
-            _courseDAO = courseDAO;
+            _courseDAO = new CourseDAO();
         }
 
         public async Task<Course> AddAsync(Course entity)

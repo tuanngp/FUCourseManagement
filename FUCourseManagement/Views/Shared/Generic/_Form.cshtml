@@ -1,0 +1,114 @@
+@using FUCourseManagement.Helpers
+@using Microsoft.EntityFrameworkCore
+@model object
+@{
+    var properties = Model?.GetType().GetProperties()
+        .Where(p => !p.Name.Contains("Collection") && p.Name != "Id")
+        .ToList();
+    var isEdit = Model != null && Model.GetType().GetProperty("Id")?.GetValue(Model) != null;
+}
+
+@functions {
+    private SelectList GetOptionsForNavigation(Type entityType, string selectedValue)
+    {
+        var context = new FUBusiness.Models.CourseEnrollManagementContext();
+        var method = typeof(DbContext).GetMethod("Set", Type.EmptyTypes).MakeGenericMethod(entityType);
+        var dbSet = method.Invoke(context, null);
+        
+        var queryable = ((IQueryable)dbSet);
+        var items = queryable.Cast<object>().ToList();
+        
+        var displayProp = entityType.GetProperties()
+            .FirstOrDefault(p => p.Name is "Name" or "Title" or "DisplayName");
+        
+        return new SelectList(items, "Id", displayProp?.Name ?? "Id", selectedValue);
+    }
+}
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">@(isEdit ? "Chỉnh sửa" : "Thêm mới") @ViewData["Title"]</h3>
+    </div>
+    <form asp-action="@(isEdit ? "Edit" : "Create")" method="post">
+        @if (isEdit)
+        {
+            <input type="hidden" name="Id" value="@Model.GetType().GetProperty("Id").GetValue(Model)" />
+        }
+        <div class="card-body">
+            @if (Model != null && properties != null)
+            {
+                foreach (var prop in properties)
+                {
+                    <div class="form-group">
+                        <label>@prop.Name</label>
+                        @{
+                            var value = prop.GetValue(Model);
+                            var type = prop.PropertyType;
+
+                            if (PropertyHelper.IsNavigationId(prop))
+                            {
+                                var navigationPropName = prop.Name.Substring(0, prop.Name.Length - 2);
+                                var navigationType = Model.GetType().GetProperty(navigationPropName)?.PropertyType;
+                                if (navigationType != null)
+                                {
+                                    var options = GetOptionsForNavigation(navigationType, value?.ToString());
+                                    <select class="form-control" name="@prop.Name" asp-items="options"></select>
+                                }
+                            }
+                            else if (type == typeof(string))
+                            {
+                                <input type="text" class="form-control" name="@prop.Name" value="@value" />
+                            }
+                            else if (type == typeof(DateTime) || type == typeof(DateTime?))
+                            {
+                                var dateValue = value as DateTime? ?? DateTime.Now;
+                                <input type="datetime-local" class="form-control" name="@prop.Name" 
+                                    value="@dateValue.ToString("yyyy-MM-ddTHH:mm")" />
+                            }
+                            else if (type == typeof(int) || type == typeof(int?) || 
+                                    type == typeof(long) || type == typeof(long?))
+                            {
+                                <input type="number" class="form-control" name="@prop.Name" value="@value" />
+                            }
+                            else if (type == typeof(decimal) || type == typeof(decimal?) ||
+                                    type == typeof(double) || type == typeof(double?))
+                            {
+                                <input type="number" class="form-control" name="@prop.Name" value="@value" step="0.01" />
+                            }
+                            else if (type == typeof(bool) || type == typeof(bool?))
+                            {
+                                <div class="custom-control custom-checkbox">
+                                    <input type="checkbox" class="custom-control-input" name="@prop.Name" id="@prop.Name" 
+                                        @((value as bool?) == true ? "checked" : "") />
+                                    <label class="custom-control-label" for="@prop.Name">@PropertyHelper.GetDisplayName(prop)</label>
+                                </div>
+                            }
+                            else if (type.IsEnum)
+                            {
+                                <select class="form-control" name="@prop.Name">
+                                    @foreach (var enumValue in Enum.GetValues(type))
+                                    {
+                                        var isSelected = value?.ToString() == enumValue.ToString();
+                                        <option value="@enumValue" selected="@isSelected">@enumValue</option>
+                                    }
+                                </select>
+                            }
+                        }
+                    </div>
+                }
+            }
+        </div>
+        <div class="card-footer">
+            <button type="submit" class="btn btn-primary">
+                <i class="fa fa-save"></i> Lưu
+            </button>
+            <a asp-action="Index" class="btn btn-default">
+                <i class="fa fa-arrow-left"></i> Quay lại
+            </a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

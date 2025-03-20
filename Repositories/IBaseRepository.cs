@@ -8,5 +8,6 @@
         Task<TEntity> AddAsync(TEntity entity);
         Task<TEntity> UpdateAsync(TEntity entity);
         Task<bool> DeleteAsync(ID id);
+        //IQueryable<TEntity> GetQueryable();
     }
 }

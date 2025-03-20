@@ -17,7 +17,7 @@ namespace Repositories.RepositoriesImpl
             return await _dao.AddAsync(entity);
         }
 
-        public async Task<bool> DeleteAsync(int id)
+        public async Task<bool> DeleteAsync(string id)
         {
             return await _dao.DeleteAsync(id);
         }
@@ -27,7 +27,7 @@ namespace Repositories.RepositoriesImpl
             return await _dao.GetAllAsync();
         }
 
-        public async Task<Session?> GetByIdAsync(int id)
+        public async Task<Session?> GetByIdAsync(String id)
         {
             return await _dao.GetByIdAsync(id);
         }
