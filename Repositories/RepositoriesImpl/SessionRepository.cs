@@ -14,6 +14,7 @@ namespace Repositories.RepositoriesImpl
 
         public async Task<Session> AddAsync(Session entity)
         {
+            entity.SessionId = Guid.NewGuid().ToString();
             return await _dao.AddAsync(entity);
         }
 

@@ -3,7 +3,7 @@ using Repositories;
 
 namespace FUCourseManagement.Controllers
 {
-    public abstract class BaseController<TEntity, TId> : Controller 
+    public abstract class BaseController<TEntity, TId> : Controller
         where TEntity : class
     {
         protected readonly IBaseRepository<TEntity, TId> _repository;
@@ -54,14 +54,24 @@ namespace FUCourseManagement.Controllers
         [ValidateAntiForgeryToken]
         public virtual async Task<IActionResult> Create(TEntity entity)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                await _repository.AddAsync(entity);
-                return RedirectToAction(nameof(Index));
+                ViewData["Title"] = _entityName;
+                return View("~/Views/Shared/Generic/Create.cshtml", entity);
             }
 
-            ViewData["Title"] = _entityName;
-            return View("~/Views/Shared/Generic/Create.cshtml", entity);
+            try
+            {
+                await _repository.AddAsync(entity);
+                TempData["SuccessMessage"] = $"{_entityName} đã được tạo thành công!";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", $"Có lỗi xảy ra khi tạo {_entityName}: {ex.Message}");
+                ViewData["Title"] = _entityName;
+                return View("~/Views/Shared/Generic/Create.cshtml", entity);
+            }
         }
 
         // GET: Entity/Edit/5
@@ -88,7 +98,11 @@ namespace FUCourseManagement.Controllers
         public virtual async Task<IActionResult> Edit(TId id, TEntity entity)
         {
             // Kiểm tra id của entity có khớp với id trong route không
-            var entityId = entity.GetType().GetProperty("Id")?.GetValue(entity);
+            var entityId = entity
+                .GetType()
+                .GetProperties()
+                .FirstOrDefault(p => p.Name == "Id" || p.Name.EndsWith("Id"))
+                ?.GetValue(entity);
             if (!entityId?.ToString().Equals(id?.ToString()) ?? true)
             {
                 return NotFound();

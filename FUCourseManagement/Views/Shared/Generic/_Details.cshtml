@@ -23,7 +23,12 @@
         </dl>
     </div>
     <div class="card-footer">
-        <a asp-action="Edit" asp-route-id="@Model?.GetType().GetProperty("Id").GetValue(Model)" class="btn btn-info">
+        @{
+            var idProp = Model.GetType().GetProperties()
+            .FirstOrDefault(p => p.Name == "Id" || p.Name.EndsWith("Id"));
+            var idValue = idProp?.GetValue(Model);
+        }
+        <a asp-action="Edit" asp-route-id="@idValue" class="btn btn-info">
             <i class="fa fa-edit"></i> Sửa
         </a>
         <a asp-action="Index" class="btn btn-default">

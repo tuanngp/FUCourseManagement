@@ -5,7 +5,7 @@ namespace FUBusiness.Models;
 
 public partial class Session
 {
-    public string SessionId { get; set; } = null!;
+    public string? SessionId { get; set; } = null!;
 
     public int? UserId { get; set; }
 
