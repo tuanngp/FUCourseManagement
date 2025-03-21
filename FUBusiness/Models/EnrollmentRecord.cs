@@ -18,4 +18,9 @@ public partial class EnrollmentRecord
     public virtual Course? Course { get; set; }
 
     public virtual User? User { get; set; }
+
+    public override string? ToString()
+    {
+        return base.ToString();
+    }
 }

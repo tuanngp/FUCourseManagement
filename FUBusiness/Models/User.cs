@@ -17,7 +17,13 @@ public partial class User
 
     public DateTime? CreatedAt { get; set; }
 
-    public virtual ICollection<EnrollmentRecord> EnrollmentRecords { get; set; } = new List<EnrollmentRecord>();
+    public virtual ICollection<EnrollmentRecord> EnrollmentRecords { get; set; } =
+        new List<EnrollmentRecord>();
 
     public virtual ICollection<Session> Sessions { get; set; } = new List<Session>();
+
+    public override string? ToString()
+    {
+        return base.ToString();
+    }
 }

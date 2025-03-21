@@ -63,15 +63,20 @@
                                         .FirstOrDefault(p => p.Name == "Id" || p.Name.EndsWith("Id"));
                                         var idValue = idProp?.GetValue(item);
                                     }
-                                    <a asp-action="Edit" asp-route-id="@idValue" class="btn btn-sm btn-info">
-                                        <i class="fa fa-edit"></i> Sửa
-                                    </a>
+                                    @if(User.IsInRole("Admin")) {
+                                        <a asp-action="Edit" asp-route-id="@idValue" class="btn btn-sm btn-info">
+                                            <i class="fa fa-edit"></i> Sửa
+                                        </a>
+                                    }
                                     <a asp-action="Details" asp-route-id="@idValue" class="btn btn-sm btn-primary">
                                         <i class="fa fa-eye"></i> Chi tiết
                                     </a>
-                                    <a href="javascript:void(0);" class="btn btn-sm btn-danger delete-item" data-id="@idValue">
-                                        <i class="fa fa-trash"></i> Xóa
-                                    </a>
+                                    @if (User.IsInRole("Admin"))
+                                    {
+                                        <a asp-action="Delete" asp-route-id="@idValue" class="btn btn-sm btn-danger delete-item">
+                                            <i class="fa fa-trash"></i> Xóa
+                                        </a>
+                                    }
                                 </div>
                             </td>
                         </tr>

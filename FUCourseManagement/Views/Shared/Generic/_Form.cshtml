@@ -4,9 +4,28 @@
 
 @{
     var properties = Model?.GetType().GetProperties()
-        .Where(p => !p.Name.Contains("Collection") && p.Name != "Id")
+        .Where(p => !p.Name.Contains("Collection") &&
+                    !(p.Name.EndsWith("Id", StringComparison.OrdinalIgnoreCase)) &&
+                    !typeof(System.Collections.IEnumerable)
+                    .IsAssignableFrom(p.PropertyType) || p.PropertyType == typeof(string)
+        )
         .ToList();
-    var isEdit = Model != null && Model.GetType().GetProperties().FirstOrDefault(p => p.Name == " Id" || p.Name.EndsWith("Id", StringComparison.OrdinalIgnoreCase))?.GetValue(Model) != null;
+    bool isCreateRetry = TempData["IsCreateRetry"] != null && (bool)TempData["IsCreateRetry"];
+    var idProperty = Model?.GetType().GetProperties()
+        .FirstOrDefault(p => p.Name == "Id" || p.Name.EndsWith("Id", StringComparison.OrdinalIgnoreCase));
+    var idValue = idProperty?.GetValue(Model);
+    bool isEdit = !isCreateRetry && idValue != null && !IsDefaultIdValue(idValue);
+}
+
+@functions {
+    private bool IsDefaultIdValue(object idValue)
+    {
+        if (idValue == null) return true;
+        if (idValue is int intValue) return intValue == 0;
+        if (idValue is Guid guidValue) return guidValue == Guid.Empty;
+        if (idValue is string strValue) return string.IsNullOrEmpty(strValue);
+        return false;
+    }
 }
 
 @functions {
@@ -35,11 +54,23 @@
                     @(isEdit ? "Chỉnh sửa" : "Thêm mới") @ViewData["Title"]
                 </h3>
             </div>
-            
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success" role="alert">
+                    @TempData["SuccessMessage"]
+                </div>
+            }
+
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger" role="alert">
+                    @TempData["ErrorMessage"]
+                </div>
+            }
             <form asp-action="@(isEdit ? "Edit" : "Create")" method="post">
                 @if (isEdit)
                 {
-                    <input type="hidden" name="Id" value="@Model.GetType().GetProperties().FirstOrDefault(p => p.Name == " Id" || p.Name.EndsWith("Id", StringComparison.OrdinalIgnoreCase))?.GetValue(Model)" />
+                    <input type="hidden" name="Id" value="@Model?.GetType().GetProperties().FirstOrDefault(p => p.Name == " Id" || p.Name.EndsWith("Id", StringComparison.OrdinalIgnoreCase))?.GetValue(Model)" />
                 }
                 
                 <div class="card-body">
@@ -51,10 +82,10 @@
                                 <div class="col-md-6 mb-3">
                                     <div class="form-group position-relative animate__animated animate__fadeIn">
                                         <label class="form-label fw-bold mb-2">
-                                            <i class="fas @(PropertyHelper.IsNavigationId(prop) ? "fa-link" : 
-                                                         prop.PropertyType == typeof(DateTime) || prop.PropertyType == typeof(DateTime?) ? "fa-calendar" :
-                                                         prop.PropertyType == typeof(bool) || prop.PropertyType == typeof(bool?) ? "fa-check-square" :
-                                                         "fa-keyboard") me-2"></i>
+                                            <i class="fas @(PropertyHelper.IsNavigationId(prop) ? "fa-link" 
+                                                        : prop.PropertyType == typeof(DateTime) || prop.PropertyType == typeof(DateTime?) ? "fa-calendar" 
+                                                        : prop.PropertyType == typeof(bool) || prop.PropertyType == typeof(bool?) ? "fa-check-square" 
+                                                        : "fa-keyboard") me-2"></i>
                                             @prop.Name
                                         </label>
                                         

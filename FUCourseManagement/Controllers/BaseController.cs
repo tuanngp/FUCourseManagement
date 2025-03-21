@@ -56,6 +56,9 @@ namespace FUCourseManagement.Controllers
         {
             if (!ModelState.IsValid)
             {
+                TempData["ErrorMessage"] =
+                    "Dữ liệu không hợp lệ. Vui lòng kiểm tra lại thông tin nhập.";
+                TempData["IsCreateRetry"] = true;
                 ViewData["Title"] = _entityName;
                 return View("~/Views/Shared/Generic/Create.cshtml", entity);
             }
@@ -69,6 +72,7 @@ namespace FUCourseManagement.Controllers
             catch (Exception ex)
             {
                 ModelState.AddModelError("", $"Có lỗi xảy ra khi tạo {_entityName}: {ex.Message}");
+                TempData["IsCreateRetry"] = true;
                 ViewData["Title"] = _entityName;
                 return View("~/Views/Shared/Generic/Create.cshtml", entity);
             }
@@ -105,7 +109,8 @@ namespace FUCourseManagement.Controllers
                 ?.GetValue(entity);
             if (!entityId?.ToString().Equals(id?.ToString()) ?? true)
             {
-                return NotFound();
+                TempData["ErrorMessage"] = "Không tìm thấy bản ghi với ID tương ứng.";
+                return View("~/Views/Shared/Generic/Edit.cshtml", entity);
             }
 
             if (ModelState.IsValid)
@@ -113,16 +118,23 @@ namespace FUCourseManagement.Controllers
                 try
                 {
                     await _repository.UpdateAsync(entity);
+                    TempData["SuccessMessage"] = "Cập nhật bản ghi thành công.";
                     return RedirectToAction(nameof(Index));
                 }
-                catch
+                catch (Exception ex)
                 {
                     if (!await EntityExists(id))
                     {
-                        return NotFound();
+                        TempData["ErrorMessage"] = "Không tìm thấy bản ghi để cập nhật.";
+                        return View("~/Views/Shared/Generic/Edit.cshtml", entity);
                     }
-                    throw;
+                    TempData["ErrorMessage"] = $"Đã xảy ra lỗi khi cập nhật bản ghi: {ex.Message}";
                 }
+            }
+            else
+            {
+                TempData["ErrorMessage"] =
+                    "Dữ liệu không hợp lệ. Vui lòng kiểm tra lại thông tin nhập.";
             }
 
             ViewData["Title"] = _entityName;
@@ -152,13 +164,23 @@ namespace FUCourseManagement.Controllers
         [ValidateAntiForgeryToken]
         public virtual async Task<IActionResult> DeleteConfirmed(TId id)
         {
-            var result = await _repository.DeleteAsync(id);
-            if (!result)
+            try
             {
-                return NotFound();
-            }
+                var result = await _repository.DeleteAsync(id);
+                if (!result)
+                {
+                    TempData["ErrorMessage"] = $"Không tìm thấy {_entityName} với ID: {id} để xóa.";
+                    return RedirectToAction(nameof(Index));
+                }
 
-            return RedirectToAction(nameof(Index));
+                TempData["SuccessMessage"] = $"{_entityName} đã được xóa thành công.";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Có lỗi xảy ra khi xóa {_entityName}: {ex.Message}";
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         protected virtual async Task<bool> EntityExists(TId id)

@@ -25,7 +25,12 @@
                 </div>
                 <div class="card-footer">
                     <form asp-action="Delete" method="post">
-                        <input type="hidden" name="Id" value="@Model?.GetType().GetProperty("Id").GetValue(Model)" />
+                        @{
+                            var idProp = Model.GetType().GetProperties()
+                            .FirstOrDefault(p => p.Name == "Id" || p.Name.EndsWith("Id"));
+                            var idValue = idProp?.GetValue(Model);
+                        }
+                        <input type="hidden" name="Id" value="@idValue" />
                         <button type="submit" class="btn btn-danger">
                             <i class="fa fa-trash"></i> Xác nhận xóa
                         </button>

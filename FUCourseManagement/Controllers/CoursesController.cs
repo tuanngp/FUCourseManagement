@@ -5,7 +5,6 @@ using Repositories;
 
 namespace FUCourseManagement.Controllers
 {
-    [Authorize(Roles = "Admin")]
     public class CoursesController : BaseController<Course, int>
     {
         public CoursesController(ICourseRepository repository)

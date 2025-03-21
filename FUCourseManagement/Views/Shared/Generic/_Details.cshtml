@@ -2,7 +2,8 @@
 @model object
 @{
     var properties = Model?.GetType().GetProperties()
-        .Where(p => !p.Name.Contains("Collection"))
+        .Where(p => !p.Name.Contains("Collection")
+        )
         .ToList();
 }
 

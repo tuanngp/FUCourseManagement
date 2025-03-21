@@ -7,23 +7,40 @@ namespace FUCourseManagement.Helpers
     {
         public static string GetDisplayValue(object item, PropertyInfo prop)
         {
-            if (item == null || prop == null) return "";
+            if (item == null || prop == null)
+                return "";
 
             var value = prop.GetValue(item);
-            if (value == null) return "";
+            if (value == null)
+                return "";
 
             // Xử lý collection
-            if (value is IEnumerable<object> collection)
+            if (value is System.Collections.IEnumerable && value.GetType().IsGenericType)
             {
-                return string.Join(", ", collection.Select(x => x?.ToString() ?? ""));
+                var collection = ((System.Collections.IEnumerable)value).Cast<object>();
+                var formattedItems = collection.Select(x =>
+                {
+                    if (x == null)
+                        return "";
+                    // In tất cả thuộc tính của từng phần tử trong collection
+                    var properties = x.GetType().GetProperties();
+                    var propValues = properties.Select(p =>
+                        $"{p.Name}: {p.GetValue(x)?.ToString() ?? ""}"
+                    );
+                    return "{" + string.Join(", ", propValues) + "}";
+                });
+                return string.Join("; ", formattedItems);
             }
 
             // Nếu là navigation property
             if (prop.PropertyType.Namespace == "FUBusiness.Models")
             {
                 // Lấy property chính để hiển thị
-                var displayProp = prop.PropertyType.GetProperties()
-                    .FirstOrDefault(p => p.Name is "FullName" or "Title" or "DisplayName" or "Name");
+                var displayProp = prop
+                    .PropertyType.GetProperties()
+                    .FirstOrDefault(p =>
+                        p.Name is "FullName" or "Title" or "DisplayName" or "Name"
+                    );
                 return displayProp?.GetValue(value)?.ToString() ?? value.ToString();
             }
 
@@ -63,17 +80,17 @@ namespace FUCourseManagement.Helpers
                 "EnrollDate" => "Ngày đăng ký",
                 "Dropped" => "Đã hủy",
                 "User" => "Người dùng",
-                "Course" => "Khóa học",
                 "Email" => "Email",
                 "Role" => "Vai trò",
                 "UserId" => "Người dùng",
-                "CourseId" => "Khóa học",
-                _ => prop.Name
+                _ => prop.Name,
             };
 
             // Nếu là collection thì thêm "Danh sách" vào trước
-            if (prop.PropertyType.IsGenericType && 
-                prop.PropertyType.GetGenericTypeDefinition() == typeof(ICollection<>))
+            if (
+                prop.PropertyType.IsGenericType
+                && prop.PropertyType.GetGenericTypeDefinition() == typeof(ICollection<>)
+            )
             {
                 var elementType = prop.PropertyType.GetGenericArguments()[0];
                 displayName = $"Danh sách {displayName}";

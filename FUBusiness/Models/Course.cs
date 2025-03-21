@@ -15,5 +15,11 @@ public partial class Course
 
     public DateTime? CreatedAt { get; set; }
 
-    public virtual ICollection<EnrollmentRecord> EnrollmentRecords { get; set; } = new List<EnrollmentRecord>();
+    public virtual ICollection<EnrollmentRecord> EnrollmentRecords { get; set; } =
+        new List<EnrollmentRecord>();
+
+    public override string? ToString()
+    {
+        return base.ToString();
+    }
 }
